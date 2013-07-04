@@ -22,11 +22,25 @@ Capistrano::Configuration.instance.load do
   set_default(:unicorn_workers) { Capistrano::CLI.ui.ask "Number of unicorn workers: " }
 
   set_default :foreman_sudo, "sudo"
-  set_default :foreman_upstart_path, "/etc/init/sites"
+  set_default :foreman_upstart_path, "/etc/init/"
   set_default :foreman_options, {}
   set_default :foreman_use_binstubs, false
 
   namespace :foreman do
+
+    namespace :env do
+      desc "Create foreman's .env file"
+      task :create, roles: :app do
+        template("env.erb", "/tmp/#{application}_env")
+        run "mv /tmp/#{application}_env #{shared_path}/config/.env"
+      end
+
+      desc "Symblink foreman's .env file"
+      task :symlink, roles: :app do
+        run "ln -nfs #{shared_path}/config/.env #{latest_release}/.env"
+      end
+    end
+
     desc "Export the Procfile to Ubuntu's upstart scripts"
     task :export, roles: :app do
       cmd = foreman_use_binstubs ? 'bin/foreman' : 'bundle exec foreman'
@@ -91,22 +105,13 @@ Capistrano::Configuration.instance.load do
   end
 
   namespace :unicorn do
-    desc "Setup Unicorn initializer and app configuration"
+    desc "Setup Unicorn app configuration"
     task :setup, roles: :app do
       run "mkdir -p #{shared_path}/config"
       template "unicorn.rb.erb", unicorn_config
-      template "unicorn_init.erb", "/tmp/unicorn_init"
-      run "chmod +x /tmp/unicorn_init"
-      run "#{sudo} mv /tmp/unicorn_init /etc/init.d/unicorn_#{application}"
-      run "#{sudo} update-rc.d -f unicorn_#{application} defaults"
     end
 
-    %w[start stop restart].each do |command|
-      desc "#{command} unicorn"
-      task command, roles: :app do
-        run "service unicorn_#{application} #{command}"
-      end
-    end
+    after "deploy:setup", "unicorn:setup"
   end
 
   desc "Setup logs rotation for nginx and unicorn"
@@ -122,7 +127,7 @@ Capistrano::Configuration.instance.load do
     config_file = "#{templates_path}/#{template_name}"
     # if no customized file, proceed with default
     unless File.exists?(config_file)
-      config_file = File.join(File.dirname(__FILE__), "../../generators/capistrano/nginx_unicorn/templates/#{template_name}")
+      config_file = File.join(File.dirname(__FILE__), "../../generators/capistrano/nginx_foreman/templates/#{template_name}")
     end
     put ERB.new(File.read(config_file)).result(binding), target
   end

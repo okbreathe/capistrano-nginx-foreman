@@ -1,18 +1,17 @@
 # Capistrano-Nginx-Foreman
 
-Capistrano tasks for configuration and management of nginx+foreman combo Rails applications. Configs can be copied to the application using generators and easily customized.
+Capistrano tasks for configuration and management of nginx+foreman combo Rails applications.
 
 Most of this code was taken from https://github.com/kalys/capistrano-nginx-unicorn - but replaces the unicorn initialization tasks with foreman tasks from https://github.com/hyperoslo/capistrano-foreman
 
 Provides capistrano tasks to:
 
 * easily add application to nginx and reload it's configuration
-* create unicorn init script for application, so it will be automatically started when OS restarts
-* start/stop unicorn (also can be done using `sudo service unicorn_<your_app> start/stop`)
-* reload unicorn using `USR2` signal to load new application version with zero downtime
+* create foreman Procifile and .env file
 * creates logrotate record to rotate application logs
 
 Provides several capistrano variables for easy customization.
+
 Also, for full customization, all configs can be copied to the application using generators.
 
 ## Installation
@@ -53,6 +52,24 @@ for nginx:
     cap nginx:reload
 
 and for foreman:
+
+    # Create foreman's .env file
+    cap foreman:env:create
+
+    # Symblink foreman's .env file
+    cap foreman:env:symlink
+
+    # Export the Procfile to Ubuntu's upstart scripts
+    cap foreman:export
+
+    # Start the application services
+    cap foreman:start
+
+    # Stop the application services
+    cap foreman:stop
+
+    # Restart the application services
+    cap foreman:restart
 
 and shared:
 
@@ -125,12 +142,12 @@ set :nginx_ssl_certificate_key, "#{nginx_server_name}.key"
 # local path to file with certificate, only makes sense if `nginx_use_ssl` is set
 # this file will be copied to remote server
 # default value: none (will be prompted if not set)
-set :nginx_ssl_certificate_local_path, "/home/ivalkeen/ssl/myssl.cert"
+set :nginx_ssl_certificate_local_path, "/home/#{`whoami`}/ssl/myssl.cert"
 
 # local path to file with certificate key, only makes sense if `nginx_use_ssl` is set
 # this file will be copied to remote server
 # default value: none (will be prompted if not set)
-set :nginx_ssl_certificate_key_local_path, "/home/ivalkeen/ssl/myssl.key"
+set :nginx_ssl_certificate_key_local_path, "/home/#{`whoami`}/ssl/myssl.key"
 ```
 
 For example, of you site name is `example.com` and you want to use 8 unicorn workers,
@@ -146,14 +163,14 @@ require 'capistrano-nginx-foreman'
 
 If you want to change default templates, you can generate them using `rails generator`
 
-    rails g capistrano:nginx_unicorn:config
+    rails g capistrano:nginx_foreman:config
 
 This will copy default templates to `config/deploy/templates` directory,
 so you can customize them as you like, and capistrano tasks will use this templates instead of default.
 
 You can also provide path, where to generate templates:
 
-    rails g capistrano:nginx_unicorn:config config/templates
+    rails g capistrano:nginx_foreman:config config/templates
 
 # TODO:
 

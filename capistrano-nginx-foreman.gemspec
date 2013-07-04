@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Capistrano::NginxForeman::VERSION
   spec.authors       = ["Asher"]
   spec.email         = ["asher@okbreathe.com"]
-  gem.description    = %q{Capistrano tasks for configuration and management of nginx+foreman combo Rails applications. Configs can be copied to the application using generators and easily customized.}
-  gem.summary        = %q{Create and manage nginx+foreman configs from capistrano}
+  spec.description    = %q{Capistrano tasks for configuration and management of nginx+foreman combo Rails applications.}
+  spec.summary        = %q{Create and manage nginx+foreman configs from capistrano}
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  gem.add_dependency 'capistrano', '>= 2.0'
+  spec.add_dependency 'capistrano', '>= 2.0'
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
