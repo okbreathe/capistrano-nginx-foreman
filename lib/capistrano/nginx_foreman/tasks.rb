@@ -10,6 +10,7 @@ Capistrano::Configuration.instance.load do
 
   set_default(:nginx_server_name) { Capistrano::CLI.ui.ask "Nginx server name: " }
   set_default(:nginx_use_ssl, false)
+  set_default(:nginx_redirect_www, true)
   set_default(:nginx_ssl_certificate) { "#{nginx_server_name}.crt" }
   set_default(:nginx_ssl_certificate_key) { "#{nginx_server_name}.key" }
   set_default(:nginx_ssl_certificate_local_path) {Capistrano::CLI.ui.ask "Local path to ssl certificate: "}
