@@ -113,6 +113,11 @@ Capistrano::Configuration.instance.load do
     end
 
     after "deploy:setup", "unicorn:setup"
+
+    desc "Zero-downtime restart of Unicorn"
+    task :restart, except: { no_release: true } do
+      run "kill -s USR2 `cat #{unicorn_pid}`"
+    end
   end
 
   desc "Setup logs rotation for nginx and unicorn"
