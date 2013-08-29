@@ -9,7 +9,7 @@ server {
 }
 <% end %>
 
-<% if nginx_redirect_www %>
+<% if nginx_redirect_www && nginx_server_name != '' && !nginx_server_name.nil? %>
 server {
   listen 80;
   server_name www.<%= nginx_server_name %>;
@@ -27,7 +27,9 @@ server {
   listen 80;
 <% end %>
 
+  <% unless nginx_server_name == '' || nginx_server_name.nil? %>
   server_name <%= nginx_server_name %>;
+  <% end %>
   root <%= current_path %>/public;
   try_files $uri/index.html $uri @unicorn_<%= application %>;
 
