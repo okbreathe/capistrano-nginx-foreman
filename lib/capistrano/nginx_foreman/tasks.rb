@@ -1,5 +1,3 @@
-require 'capistrano'
-
 Capistrano::Configuration.instance.load do
 
   def set_default(name, *args, &block)
@@ -23,7 +21,7 @@ Capistrano::Configuration.instance.load do
   set_default(:unicorn_workers) { Capistrano::CLI.ui.ask "Number of unicorn workers: " }
 
   set_default :foreman_sudo, "sudo"
-  set_default :foreman_upstart_path, "/etc/init/"
+  set_default :foreman_upstart_path, "/etc/init"
   set_default :foreman_options, {}
   set_default :foreman_use_binstubs, false
 
@@ -45,23 +43,23 @@ Capistrano::Configuration.instance.load do
     desc "Export the Procfile to Ubuntu's upstart scripts"
     task :export, roles: :app do
       cmd = foreman_use_binstubs ? 'bin/foreman' : 'bundle exec foreman'
-      run "if [[ -d #{foreman_upstart_path} ]]; then #{foreman_sudo} mkdir -p #{foreman_upstart_path}; fi"
+      run "if [ ! -d #{foreman_upstart_path} ]; then #{foreman_sudo} mkdir -p #{foreman_upstart_path}; fi"
       run "cd #{current_path} && #{foreman_sudo} #{cmd} export upstart #{foreman_upstart_path} #{format(options)}"
     end
 
     desc "Start the application services"
     task :start, roles: :app do
-      sudo "service #{options[:app]} start"
+      sudo "start #{options[:app]}"
     end
 
     desc "Stop the application services"
     task :stop, roles: :app do
-      sudo "service #{options[:app]} stop"
+      sudo "stop #{options[:app]}"
     end
 
     desc "Restart the application services"
     task :restart, roles: :app do
-      run "sudo service #{options[:app]} start || sudo service #{options[:app]}  restart"
+      run "sudo restart #{options[:app]} || sudo restart #{options[:app]}"
     end
 
     def options
@@ -129,13 +127,13 @@ Capistrano::Configuration.instance.load do
 
   after "deploy:setup", "logrotate"
 
-  def template(template_name, target)
+  def template(template_name, target, mode = 0600)
     config_file = "#{templates_path}/#{template_name}"
     # if no customized file, proceed with default
     unless File.exists?(config_file)
       config_file = File.join(File.dirname(__FILE__), "../../generators/capistrano/nginx_foreman/templates/#{template_name}")
     end
-    put ERB.new(File.read(config_file)).result(binding), target
+    put ERB.new(File.read(config_file)).result(binding), target, mode: mode
   end
 
 end
