@@ -43,8 +43,22 @@ Capistrano::Configuration.instance.load do
     desc "Export the Procfile to Ubuntu's upstart scripts"
     task :export, roles: :app do
       cmd = foreman_use_binstubs ? 'bin/foreman' : 'bundle exec foreman'
+
+      # export to a temporary location
+      export_path = '/tmp/foreman_export'
+      sudo "rm -rf #{export_path}"
+      run "mkdir -p #{export_path}"
+      run "cd #{current_path} && #{cmd} export upstart #{export_path} #{format(options)}"
+
+      # make sure init dir exists
       run "if [ ! -d #{foreman_upstart_path} ]; then #{foreman_sudo} mkdir -p #{foreman_upstart_path}; fi"
-      run "cd #{current_path} && #{foreman_sudo} #{cmd} export upstart #{foreman_upstart_path} #{format(options)}"
+
+      # clean up old files
+      puts "cleaning up #{foreman_upstart_path}/#{application}*.conf..."
+      sudo "rm #{foreman_upstart_path}/#{application}*.conf"
+
+      # move over exported files
+      sudo "mv #{export_path}/#{application}*.conf #{foreman_upstart_path}"
     end
 
     desc "Start the application services"
